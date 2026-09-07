@@ -23,8 +23,10 @@ export async function POST(req: NextRequest) {
     await session.save();
 
     return NextResponse.json({ ok: true, userId: user.userId });
-  } catch {
-    return NextResponse.json({ error: "Login failed" }, { status: 401 });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Login failed";
+    console.error("[auth]", msg);
+    return NextResponse.json({ error: msg }, { status: 401 });
   }
 }
 

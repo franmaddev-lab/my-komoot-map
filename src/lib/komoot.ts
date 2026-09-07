@@ -27,15 +27,18 @@ export async function loginToKomoot(
     headers: {
       Authorization: `Basic ${credentials}`,
       "Content-Type": "application/json",
+      "User-Agent": "Mozilla/5.0 (compatible; my-komoot-map/1.0)",
     },
   });
 
   if (!res.ok) {
-    throw new Error("Invalid credentials");
+    const body = await res.text().catch(() => "");
+    throw new Error(`Komoot API ${res.status}: ${body}`);
   }
 
   const data = await res.json();
-  const userId = data.username;
+  // userId is the numeric username field in Komoot's API response
+  const userId = data.username ?? data.user_id ?? data.id;
 
   return { userId, email };
 }
