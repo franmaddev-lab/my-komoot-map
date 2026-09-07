@@ -1,32 +1,37 @@
 import { NextResponse } from "next/server";
-import { fetchTours, fetchTourCoordinates } from "@/lib/komoot";
+import { fetchTours, fetchTourCoordinates, KomootAuth } from "@/lib/komoot";
 import { getSession } from "@/lib/session";
 
 export async function GET() {
   const session = await getSession();
 
-  if (!session.userId || !session.token) {
+  if (!session.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  try {
-    const tours = await fetchTours(session.userId, session.token);
+  const auth: KomootAuth = {
+    userId: session.userId,
+    email: session.email ?? "",
+    basicToken: session.basicToken,
+    cookie: session.cookie,
+  };
 
-    // Fetch coordinates for tours that don't have embedded path data
+  try {
+    const tours = await fetchTours(auth);
+
     const toursWithPaths = await Promise.all(
       tours.map(async (tour) => {
         if (tour.path.length === 0 && tour.id) {
-          tour.path = await fetchTourCoordinates(tour.id, session.token!);
+          tour.path = await fetchTourCoordinates(tour.id, auth);
         }
         return tour;
       })
     );
 
     return NextResponse.json({ tours: toursWithPaths });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch tours" },
-      { status: 500 }
-    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Failed to fetch tours";
+    console.error("[tours]", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

@@ -13,16 +13,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const user = await loginToKomoot(email, password);
-    const token = Buffer.from(`${email}:${password}`).toString("base64");
+    const auth = await loginToKomoot(email, password);
 
     const session = await getSession();
-    session.userId = user.userId;
-    session.email = user.email;
-    session.token = token;
+    session.userId = auth.userId;
+    session.email = auth.email;
+    session.basicToken = auth.basicToken;
+    session.cookie = auth.cookie;
     await session.save();
 
-    return NextResponse.json({ ok: true, userId: user.userId });
+    return NextResponse.json({ ok: true, userId: auth.userId });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Login failed";
     console.error("[auth]", msg);

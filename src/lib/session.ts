@@ -4,7 +4,8 @@ import { cookies } from "next/headers";
 export interface SessionData {
   userId?: string;
   email?: string;
-  token?: string; // base64-encoded "email:password" for Komoot basic auth
+  basicToken?: string;
+  cookie?: string;
 }
 
 const sessionOptions: SessionOptions = {
