@@ -23,7 +23,7 @@ export async function loginToKomoot(
 ): Promise<KomootUser> {
   const credentials = Buffer.from(`${email}:${password}`).toString("base64");
 
-  const res = await fetch(`${KOMOOT_API}/account`, {
+  const res = await fetch(`${KOMOOT_API}/account?email=${encodeURIComponent(email)}`, {
     headers: {
       Authorization: `Basic ${credentials}`,
       "Content-Type": "application/json",
