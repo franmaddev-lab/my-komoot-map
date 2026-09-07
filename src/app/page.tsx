@@ -95,6 +95,9 @@ export default function LoginPage() {
         <p className="text-xs text-gray-400 text-center mt-6">
           Your credentials are used only to fetch your tours and are never stored permanently.
         </p>
+        <p className="text-xs text-gray-300 text-center mt-2 font-mono">
+          {process.env.NEXT_PUBLIC_GIT_SHA ?? "dev"}
+        </p>
       </div>
     </main>
   );
