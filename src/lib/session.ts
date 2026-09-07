@@ -2,10 +2,17 @@ import { getIronSession, IronSession, SessionOptions } from "iron-session";
 import { cookies } from "next/headers";
 
 export interface SessionData {
+  provider?: "strava" | "komoot";
   userId?: string;
   email?: string;
+  displayName?: string;
+  // Komoot
   basicToken?: string;
   cookie?: string;
+  // Strava
+  stravaAccessToken?: string;
+  stravaRefreshToken?: string;
+  stravaExpiresAt?: number;
 }
 
 const sessionOptions: SessionOptions = {
