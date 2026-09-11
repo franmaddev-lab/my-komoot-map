@@ -10,6 +10,7 @@ function LoginPage() {
   const errorParam = searchParams.get("error");
 
   const [showKomoot, setShowKomoot] = useState(false);
+  const [showGarmin, setShowGarmin] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(
@@ -17,6 +18,23 @@ function LoginPage() {
     errorParam === "strava_failed" ? "Strava connection failed. Try again." : ""
   );
   const [loading, setLoading] = useState(false);
+
+  async function handleGarminSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/garmin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || "Login failed"); return; }
+      router.push("/map");
+    } catch { setError("Something went wrong"); }
+    finally { setLoading(false); }
+  }
 
   async function handleKomootSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,7 +76,7 @@ function LoginPage() {
           </div>
         )}
 
-        {!showKomoot ? (
+        {!showKomoot && !showGarmin ? (
           <div className="space-y-3">
             {/* Strava */}
             <a
@@ -74,6 +92,18 @@ function LoginPage() {
               </div>
             </a>
 
+            {/* Garmin */}
+            <button
+              onClick={() => setShowGarmin(true)}
+              className="flex items-center gap-4 w-full bg-white hover:bg-gray-50 border border-gray-200 text-gray-800 font-semibold px-5 py-4 rounded-2xl transition-colors"
+            >
+              <span className="text-3xl shrink-0">⌚</span>
+              <div className="text-left">
+                <div>Continue with Garmin</div>
+                <div className="text-xs font-normal text-gray-400">Garmin Connect email &amp; password</div>
+              </div>
+            </button>
+
             {/* Komoot */}
             <button
               onClick={() => setShowKomoot(true)}
@@ -85,6 +115,35 @@ function LoginPage() {
                 <div className="text-xs font-normal text-gray-400">Email &amp; password required</div>
               </div>
             </button>
+          </div>
+        ) : showGarmin ? (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <button
+              onClick={() => { setShowGarmin(false); setError(""); }}
+              className="text-sm text-gray-400 hover:text-gray-600 mb-4 flex items-center gap-1"
+            >
+              ← Back
+            </button>
+            <h2 className="font-semibold text-gray-900 mb-4">Sign in with Garmin Connect</h2>
+            <form onSubmit={handleGarminSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-400"
+                  placeholder="you@example.com" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-400"
+                  placeholder="••••••••" />
+              </div>
+              {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+              <button type="submit" disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg transition-colors">
+                {loading ? "Signing in…" : "Sign in"}
+              </button>
+            </form>
           </div>
         ) : (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">

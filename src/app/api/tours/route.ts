@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { fetchTours, fetchTourCoordinates, KomootAuth } from "@/lib/komoot";
 import { fetchStravaActivities } from "@/lib/strava";
+import { fetchGarminActivities } from "@/lib/garmin";
 import { getSession } from "@/lib/session";
 
 export async function GET() {
@@ -11,6 +12,11 @@ export async function GET() {
   }
 
   try {
+    if (session.provider === "garmin" && session.garminTokenJson) {
+      const tours = await fetchGarminActivities({ tokenJson: session.garminTokenJson });
+      return NextResponse.json({ tours });
+    }
+
     if (session.provider === "strava") {
       const tours = await fetchStravaActivities(session.stravaAccessToken!);
       return NextResponse.json({ tours });

@@ -13,6 +13,7 @@ export default function MapPage() {
   const [selected, setSelected] = useState<KomootTour | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [loadingRoute, setLoadingRoute] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -32,6 +33,23 @@ export default function MapPage() {
     }
     load();
   }, [router]);
+
+  async function handleLoadRoute(tour: KomootTour) {
+    if (tour.path.length > 0 || loadingRoute === tour.id) return;
+    setLoadingRoute(tour.id);
+    try {
+      const res = await fetch(`/api/tours/${tour.id}`);
+      if (!res.ok) return;
+      const { path } = await res.json();
+      if (path?.length > 0) {
+        setTours((prev) =>
+          prev.map((t) => (t.id === tour.id ? { ...t, path } : t))
+        );
+      }
+    } finally {
+      setLoadingRoute(null);
+    }
+  }
 
   async function handleLogout() {
     await fetch("/api/auth", { method: "DELETE" });
@@ -81,7 +99,7 @@ export default function MapPage() {
           {tours.map((tour) => (
             <button
               key={tour.id}
-              onClick={() => setSelected(tour)}
+              onClick={() => { setSelected(tour); handleLoadRoute(tour); }}
               className={`w-full text-left px-4 py-3 border-b hover:bg-emerald-50 transition-colors ${
                 selected?.id === tour.id ? "bg-emerald-50 border-l-4 border-l-emerald-500" : ""
               }`}
@@ -115,7 +133,14 @@ export default function MapPage() {
             </div>
           </div>
         ) : (
-          <TourMap tours={tours} selected={selected} onSelect={setSelected} />
+          <>
+            <TourMap tours={tours} selected={selected} onSelect={(t) => { setSelected(t); handleLoadRoute(t); }} onLoadRoute={handleLoadRoute} />
+            {loadingRoute && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white text-xs px-3 py-1.5 rounded-full">
+                Loading route…
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>
