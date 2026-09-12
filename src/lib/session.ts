@@ -26,6 +26,7 @@ const sessionOptions: SessionOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
   },
+  chunk: true,
 };
 
 export async function getSession(): Promise<IronSession<SessionData>> {

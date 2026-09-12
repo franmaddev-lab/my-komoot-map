@@ -13,11 +13,20 @@ export async function loginToGarmin(
   email: string,
   password: string
 ): Promise<GarminSession> {
-  const client = new GarminConnect({ username: email, password });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (client as any).login(email, password);
-  const tokenJson = JSON.stringify(client.exportToken());
-  return { tokenJson };
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, 1500 * attempt));
+    try {
+      const client = new GarminConnect({ username: email, password });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (client as any).login(email, password);
+      const tokenJson = JSON.stringify(client.exportToken());
+      return { tokenJson };
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr;
 }
 
 async function restoreClient(tokenJson: string): Promise<GarminConnect> {
